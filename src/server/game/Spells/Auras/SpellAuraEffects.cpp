@@ -2899,7 +2899,13 @@ void AuraEffect::HandleAuraTransform(AuraApplication const* aurApp, uint8 mode, 
         if (target->getTransForm() == GetId())
             target->setTransForm(0);
 
-        target->RestoreDisplayId();
+        // A creature dying under its own transform keeps the model on its corpse: changing the display at the
+        // moment of death makes the client skip the death animation. Respawn and pet revive reset the display.
+        bool const keepCorpseDisplay = aurApp->GetRemoveMode() == AURA_REMOVE_BY_DEATH && target->IsCreature()
+            && GetCasterGUID() == target->GetGUID();
+
+        if (!keepCorpseDisplay)
+            target->RestoreDisplayId();
 
         // Dragonmaw Illusion (restore mount model)
         if (GetId() == 42016 && target->GetMountID() == 16314)
